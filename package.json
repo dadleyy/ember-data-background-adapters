@@ -1,17 +1,19 @@
 {
-  "name": "ember-data-background-adapter",
-  "version": "0.0.0",
+  "name": "@dadleyy/ember-data-background-adapter",
+  "version": "0.0.1",
   "description": "The default blueprint for ember-cli addons.",
   "keywords": [
     "ember-addon"
   ],
   "license": "MIT",
-  "author": "",
+  "author": "Danny Hadley <dadleyy@gmail.com>",
   "directories": {
-    "doc": "doc",
     "test": "tests"
   },
-  "repository": "",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dadleyy/ember-data-background-adapters.git"
+  },
   "scripts": {
     "build": "ember build",
     "lint:js": "eslint ./*.js addon addon-test-support app config lib server test-support tests",
@@ -61,5 +63,10 @@
   },
   "ember-addon": {
     "configPath": "tests/dummy/config"
-  }
+  },
+  "main": "index.js",
+  "bugs": {
+    "url": "https://github.com/dadleyy/ember-data-background-adapters/issues"
+  },
+  "homepage": "https://github.com/dadleyy/ember-data-background-adapters#readme"
 }
