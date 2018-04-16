@@ -17,7 +17,7 @@ const PLUGIN_KEY = 'ember-data-background-adapter-plugin';
 const WORKERS_LOCATION = 'workers/background-adapters';
 
 module.exports = {
-  name: 'ember-data-background-adapter',
+  name: '@dadleyy/ember-data-background-adapter',
 
   included(app) {
     if (this._super.included) {

@@ -6,7 +6,7 @@ module('Unit | Adapter | background adapter', function(hooks) {
 
   // Replace this with your real tests.
   test('it exists', function(assert) {
-    let adapter = this.owner.lookup('adapter:background-adapter');
+    const adapter = this.owner.lookup('adapter:background-adapter');
     assert.ok(adapter);
   });
 });
