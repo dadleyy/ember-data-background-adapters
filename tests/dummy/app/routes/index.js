@@ -5,7 +5,10 @@ import debugLogger from 'ember-debug-logger';
 export default Route.extend({
   store: service(),
   debug: debugLogger(),
+
   async model() {
-    this.debug('on index route');
+    const store = this.get('store');
+    await store.query('galaxy', { });
+    this.debug('on index route %o', { });
   },
 });

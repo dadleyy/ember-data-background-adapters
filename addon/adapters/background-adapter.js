@@ -8,9 +8,8 @@ export default DS.JSONAPIAdapter.extend({
   async query(store, modelClass, query) {
     const workers = this.get('workers');
     const modelName = get(modelClass, 'modelName');
-    const serializer = store.serializerFor(modelClass.modelName);
     const url = this.urlForQuery(query, modelName);
-    const data = await workers.chunk(url, { serializer });
+    const data = await workers.chunk(url, { modelName });
 
     return { data };
   },
