@@ -4,11 +4,14 @@ const Funnel = require('broccoli-funnel');
 const Rollup = require('broccoli-rollup');
 const Babel = require('broccoli-babel-transpiler');
 
+const exists = require('exists-sync');
 const path = require('path');
 const dig = require('object-dig');
 const writeFile = require('broccoli-file-creator');
+const commonjs = require('rollup-plugin-commonjs');
 const merge = require('broccoli-merge-trees');
 const glob = require('glob');
+const resolve = require('browser-resolve');
 const debug = require('debug')('ember-data-background-adapter');
 const uglify = require('broccoli-uglify-sourcemap');
 
@@ -94,12 +97,11 @@ module.exports = {
       // re-direct the files stored in the plugin's worker location to the worker location, namespaced under the pkg.
       const out = path.join(WORKERS_LOCATION, plugin.pkg.name);
       const tree = new Funnel(root, { destDir: out });
-      const reference = path.join(plugin.pkg.name, 'index');
 
-      debug('found plugin "%s" (reference %s), adding local workers to worker funnel', plugin.pkg.name, reference);
+      debug('found plugin "%s", adding local workers to worker funnel', plugin.pkg.name);
 
       // add an import line - this will be dumped into the worker file that we're generating.
-      imports.push(`import "./${reference}";`);
+      imports.push(`import "${plugin.pkg.name}";`);
       trees.push(tree);
     }
 
@@ -116,7 +118,7 @@ module.exports = {
     const rollup = new Rollup(compiler, {
       rollup: {
         input: main,
-        plugins: [],
+        plugins: [resolver({ plugins, browser: true }), commonjs()],
         output: {
           file: main,
           format: 'iife',
@@ -146,4 +148,106 @@ function transpiler(tree) {
 function keywords(addon, keyword) {
   keyword = keyword || PLUGIN_KEY;
   return (addon.pkg && addon.pkg.keywords) && addon.pkg.keywords.indexOf(keyword) > -1;
+}
+
+function resolver({ plugins }) {
+  const env = { resolutions: new Map() };
+
+  return {
+    resolveId(importee, importer) {
+      if (/\0/.test(importee) || !importer) {
+        return null;
+      }
+
+      const origin = path.dirname(importer);
+      const workspace = dig(env, 'locations.workspace') || seek(origin, WORKERS_LOCATION);
+
+      if (!env.locations) {
+        const workers = path.join(workspace, WORKERS_LOCATION);
+        env.locations = { workers, workspace };
+        debug('worker resolver established workspace to %s', workspace);
+      }
+
+      const relative = path.relative(env.locations.workers, importer);
+      const parts = relative.split(path.sep);
+
+      for (const plugin of plugins) {
+        const name = plugin.pkg.name;
+        const workers = path.join(env.locations.workers, name);
+        const index = name ? path.join(workers, 'index.js') : null;
+
+        // if we're importing the plugin by name check for index and import it.
+        if (name === importee && exists(index)) {
+          return index;
+        }
+
+        const match = parts.some((bit, i) => path.join(relative, Array(i+1).fill('..').join(path.sep)) === name);
+
+        if (!match) {
+          continue;
+        }
+
+        if (exists(path.join(workers, importee + '.js'))) {
+          return path.join(workers, importee + '.js');
+        }
+
+
+        const existing = env.resolutions.get(importee);
+
+        if (existing && existing.owner !== name) {
+          debug('%s is imported by both "%s" and "%s"', importee, existing.owner, name);
+          return null;
+        }
+
+        if (existing) {
+          return existing.location;
+        }
+
+        const location = resolve.sync(importee, { basedir: plugin.root }) || null;
+
+        if (!location) {
+          debug('"%" appeared to own %s but was not found in "%s"', name, importee, plugin.root);
+          continue;
+        }
+
+        env.resolutions.set(importee, { owner: name, location });
+        debug('%s is being imported by "%s"', importee, name);
+        return location;
+      }
+
+      return sideload(env.resolutions, importer, importee);
+    },
+  };
+}
+
+function sideload(registrations, importer, importee) {
+  for (const [name, resolution] of registrations.entries()) {
+    const { location } = resolution;
+
+    if (location !== importer) {
+      continue;
+    }
+
+    const basedir = path.dirname(location);
+    const resolved = resolve.sync(importee, { basedir });
+
+    if (resolved) {
+      registrations.set(importee, { location: resolved });
+      return resolved;
+    }
+  }
+
+  return null;
+}
+
+function seek(head, needle) {
+  while (path.resolve(path.join(head, '..')) !== head && head !== path.sep && head) {
+    head = path.resolve(path.join(head, '..'));
+
+    if (exists(path.join(head, needle))) {
+      return head;
+    }
+  }
+
+  return null;
 }
