@@ -3,6 +3,7 @@
 const Funnel = require('broccoli-funnel');
 const Rollup = require('broccoli-rollup');
 const Babel = require('broccoli-babel-transpiler');
+const BroccoliDebug = require('broccoli-debug');
 
 const exists = require('exists-sync');
 const path = require('path');
@@ -12,13 +13,15 @@ const commonjs = require('rollup-plugin-commonjs');
 const merge = require('broccoli-merge-trees');
 const glob = require('glob');
 const resolve = require('browser-resolve');
-const debug = require('debug')('ember-data-background-adapter');
+const debug = require('debug')('ember-data-background-adapters');
 const uglify = require('broccoli-uglify-sourcemap');
 
 const OPTION_KEY = 'ember-data-background-adapter';
 const PLUGIN_KEY = 'ember-data-background-adapter-plugin';
 const WORKERS_LOCATION = 'workers/background-adapters';
 const WORKER_FILENAME = 'worker.js';
+
+const debugTree = BroccoliDebug.buildDebugCallback('ember-data-background-adapters');
 
 module.exports = {
   name: '@dadleyy/ember-data-background-adapter',
@@ -107,15 +110,15 @@ module.exports = {
 
     // create the main worker import file - during rollup all associated files will be pulled into this one.
     const main = path.join(WORKERS_LOCATION, 'index.js');
-    const importer = writeFile(main, imports.join('\n'));
+    const importer = debugTree(writeFile(main, imports.join('\n')), 'worker-imports');
 
     // assemble all source code into a single location.
-    const worker = merge(trees.concat([importer]), { overwrite: true });
+    const worker = debugTree(merge(trees.concat([importer]), { overwrite: true }), 'merged-workers');
 
     // with all of our code compiled down to a single place, run the babel transpiler against the code.
-    const compiler = transpiler(worker, this.app);
+    const compiler = debugTree(transpiler(worker, this.app), 'transpiled-workers');
 
-    const rollup = new Rollup(compiler, {
+    const rollup = debugTree(new Rollup(compiler, {
       rollup: {
         input: main,
         plugins: [resolver({ plugins, browser: true }), commonjs()],
@@ -124,7 +127,7 @@ module.exports = {
           format: 'iife',
         },
       },
-    });
+    }), 'worker-rollup');
 
     const minconfig = dig(this.app, 'options.minifyJS');
 
@@ -140,7 +143,8 @@ module.exports = {
 };
 
 function transpiler(tree) {
-  const options = { };
+  const options = {
+  };
 
   return new Babel(tree, options);
 }
@@ -168,6 +172,17 @@ function resolver({ plugins }) {
         debug('worker resolver established workspace to %s', workspace);
       }
 
+      // check to see if the file being requested exists locally from one of the merged trees.
+      const [local] = [
+        importee + '.js',
+        path.join(importee, 'index.js'),
+      ].filter(p => exists(path.join(env.locations.workers, p)));
+
+      if (local) {
+        debug('able to resolve "%s" locally', local);
+        return path.join(env.locations.workers, local)
+      }
+
       const relative = path.relative(env.locations.workers, importer);
       const parts = relative.split(path.sep);
 
@@ -178,6 +193,7 @@ function resolver({ plugins }) {
 
         // if we're importing the plugin by name check for index and import it.
         if (name === importee && exists(index)) {
+          debug('"%s" is the index file, resolving', importee);
           return index;
         }
 
@@ -188,9 +204,9 @@ function resolver({ plugins }) {
         }
 
         if (exists(path.join(workers, importee + '.js'))) {
+          debug('"%s" is imported by & owned by "%s"', importee, name);
           return path.join(workers, importee + '.js');
         }
-
 
         const existing = env.resolutions.get(importee);
 
@@ -200,6 +216,7 @@ function resolver({ plugins }) {
         }
 
         if (existing) {
+          debug('have already seen %s, returning from cache', importee);
           return existing.location;
         }
 
@@ -211,10 +228,11 @@ function resolver({ plugins }) {
         }
 
         env.resolutions.set(importee, { owner: name, location });
-        debug('%s is being imported by "%s"', importee, name);
+        debug('external dependency "%s" is being imported by "%s"', importee, name);
         return location;
       }
 
+      debug('unable to determine "%s" from plugins, checking other dep locations', importee);
       return sideload(env.resolutions, importer, importee);
     },
   };
