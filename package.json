@@ -1,7 +1,7 @@
 {
-  "name": "@dadleyy/ember-data-background-adapter",
+  "name": "ember-data-background-adapters",
   "version": "0.0.1-alpha1",
-  "description": "The default blueprint for ember-cli addons.",
+  "description": "A package for playing around with data in web workers",
   "keywords": [
     "ember-addon"
   ],

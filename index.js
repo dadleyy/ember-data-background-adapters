@@ -16,15 +16,15 @@ const resolve = require('browser-resolve');
 const debug = require('debug')('ember-data-background-adapters');
 const uglify = require('broccoli-uglify-sourcemap');
 
-const OPTION_KEY = 'ember-data-background-adapter';
-const PLUGIN_KEY = 'ember-data-background-adapter-plugin';
+const OPTION_KEY = 'ember-data-background-adapters';
+const PLUGIN_KEY = 'ember-data-background-adapters-plugin';
 const WORKERS_LOCATION = 'workers/background-adapters';
 const WORKER_FILENAME = 'worker.js';
 
 const debugTree = BroccoliDebug.buildDebugCallback('ember-data-background-adapters');
 
 module.exports = {
-  name: '@dadleyy/ember-data-background-adapter',
+  name: 'ember-data-background-adapters',
 
   included(app) {
     if (this._super.included) {
