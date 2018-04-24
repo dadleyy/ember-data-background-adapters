@@ -1,6 +1,6 @@
 {
   "name": "ember-data-background-adapters",
-  "version": "0.0.1-alpha2",
+  "version": "0.0.1-alpha3",
   "description": "A package for playing around with data in web workers",
   "keywords": [
     "ember-addon"
@@ -21,10 +21,7 @@
     "test": "ember test"
   },
   "dependencies": {
-    "ember-cli-babel": "^6.6.0"
-  },
-  "devDependencies": {
-    "broccoli-asset-rev": "^2.4.5",
+    "ember-cli-babel": "^6.6.0",
     "broccoli-babel-transpiler": "^6.1.4",
     "broccoli-debug": "^0.6.4",
     "broccoli-file-creator": "^1.1.1",
@@ -34,6 +31,15 @@
     "broccoli-uglify-sourcemap": "^2.1.1",
     "browser-resolve": "^1.11.2",
     "cuid": "^2.1.1",
+    "exists-sync": "^0.1.0",
+    "ember-debug-logger": "^1.1.0",
+    "glob": "^7.1.2",
+    "loader.js": "^4.2.3",
+    "object-dig": "^0.1.1",
+    "rollup-plugin-commonjs": "^9.1.0"
+  },
+  "devDependencies": {
+    "broccoli-asset-rev": "^2.4.5",
     "ember-ajax": "^3.0.0",
     "ember-cli": "~3.0.2",
     "ember-cli-dependency-checker": "^2.0.0",
@@ -46,7 +52,6 @@
     "ember-cli-sri": "^2.1.0",
     "ember-cli-uglify": "^2.0.0",
     "ember-data": "^3.1.1",
-    "ember-debug-logger": "^1.1.0",
     "ember-disable-prototype-extensions": "^1.1.2",
     "ember-export-application-global": "^2.0.0",
     "ember-load-initializers": "^1.0.0",
@@ -56,12 +61,7 @@
     "ember-source-channel-url": "^1.0.1",
     "ember-try": "^0.2.23",
     "eslint-plugin-ember": "^5.0.0",
-    "eslint-plugin-node": "^5.2.1",
-    "exists-sync": "^0.1.0",
-    "glob": "^7.1.2",
-    "loader.js": "^4.2.3",
-    "object-dig": "^0.1.1",
-    "rollup-plugin-commonjs": "^9.1.0"
+    "eslint-plugin-node": "^5.2.1"
   },
   "engines": {
     "node": "^4.5 || 6.* || >= 7.*"
