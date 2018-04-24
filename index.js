@@ -42,6 +42,8 @@ module.exports = {
       location: path.join(base.rootURL, WORKERS_LOCATION, WORKER_FILENAME),
     };
 
+    debug('building runtime config for %s', env);
+
     return { backgroundAdapters }
   },
 
@@ -129,16 +131,9 @@ module.exports = {
       },
     }), 'worker-rollup');
 
-    const minconfig = dig(this.app, 'options.minifyJS');
-
-    debug('tree complete');
-
-    if (minconfig) {
-      debug('minifying worker code');
-      return merge([application, uglify(compiler)]);
-    }
-
-    return merge([application, rollup]);
+    const min = dig(this.app.options, 'minifyJS', 'enabled');
+    debug('finished building post-process tree, continuing (minify? %s)', min);
+    return min ? merge([application, uglify(rollup)]) : merge([application, rollup]);
   },
 };
 

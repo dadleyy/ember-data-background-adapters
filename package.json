@@ -1,6 +1,6 @@
 {
   "name": "ember-data-background-adapters",
-  "version": "0.0.1-alpha1",
+  "version": "0.0.1-alpha2",
   "description": "A package for playing around with data in web workers",
   "keywords": [
     "ember-addon"
